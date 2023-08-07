@@ -25,4 +25,4 @@ Contributions, issues, and feature requests are welcome!
 
 ## License
 
-[Your chosen license here, for example, MIT]
+This project is distributed under the MIT license.
