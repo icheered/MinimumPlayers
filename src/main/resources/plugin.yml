@@ -1,5 +1,5 @@
 name: minimumplayers
 main: com.icheered.minimumplayers.Plugin
-version: 0.0.1
+version: 1.1.0
 api-version: 1.15
 description: Freeze players until there are a minimum number of players online

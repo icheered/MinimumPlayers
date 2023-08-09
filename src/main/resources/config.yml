@@ -1,1 +1,23 @@
+# Minimum number of players before the server unlocks
 minimumNumberOfPlayers: 3
+
+# When a player leaves, the server will wait this many minutes before locking
+# This gives players a chance to finish up what they're doing
+allowGracePeriod: true
+gracePeriodMinutes: 5
+sendGracePeriodMessage: true
+gracePerdiodMessage: "The server will lock in %minutes% minutes if no one else joins."
+
+# When a player tries to move while the server is locked, should they be notified?
+sendMessageWhenFrozen: true
+frozenMessage: "You're frozen! There are currently %currentPlayers% players online and %minimumPlayers% players are required to unlock the server."
+frozenMessageIntervalSeconds: 5 # Increase if you don't want to spam players
+
+# Message to send when the server is locked
+serverLockedMessage: "Currently %currentPlayers% players are online. %minimumPlayers% players are required to unlock the server."
+
+# Message to send when the player number is INCREASED to the minimum
+playersIncreasedToMinimumMessage: "The server is now unlocked!"
+
+# Message to send when the player number is DECREASED to the minimum
+playersDecreasedToMinimumMessage: "Minimum players reached. If anyone else leaves the server will be locked!"
