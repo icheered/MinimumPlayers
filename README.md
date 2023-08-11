@@ -32,5 +32,5 @@ Contributions, issues, and feature requests are welcome!
 This project is distributed under the MIT license.
 
 ## Change Log
-V1.0.0: Plugin released.
-V1.1.0: Added grace period feature, and made everything configurable.
+- V1.0.0: Plugin released.
+- V1.1.0: Added grace period feature, and made everything configurable.
