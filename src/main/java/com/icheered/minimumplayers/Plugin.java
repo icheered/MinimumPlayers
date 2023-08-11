@@ -7,15 +7,15 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.ChatColor;
 
 public class Plugin extends JavaPlugin {
-    private static final Logger LOGGER = Logger.getLogger("minimumplayers");
+    public static final Logger LOGGER = Logger.getLogger("minimumplayers");
     private static final int DEFAULT_MINIMUM_PLAYERS = 3;
 
     private BukkitTask freezeTask;
     public boolean isServerFrozen = true;
 
     private int minimumNumberOfPlayers;
+    private int currentNumberOfPlayers;
 
-    // Newly added fields
     private boolean allowGracePeriod;
     private int gracePeriodMinutes;
     private boolean sendGracePeriodMessage;
@@ -31,6 +31,7 @@ public class Plugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         minimumNumberOfPlayers = getConfig().getInt("minimumNumberOfPlayers", DEFAULT_MINIMUM_PLAYERS);
+        LOGGER.info("minimumplayers enabled with minimum number of players: " + minimumNumberOfPlayers);
 
         // Load new configuration values
         allowGracePeriod = getConfig().getBoolean("allowGracePeriod", true);
@@ -44,8 +45,6 @@ public class Plugin extends JavaPlugin {
         playersIncreasedToMinimumMessage = getConfig().getString("playersIncreasedToMinimumMessage");
         playersDecreasedToMinimumMessage = getConfig().getString("playersDecreasedToMinimumMessage");
 
-        LOGGER.info("minimumplayers enabled with minimum number of players: " + minimumNumberOfPlayers);
-
         Bukkit.getPluginManager().registerEvents(new PlayerMovementHandler(this), this);
         Bukkit.getPluginManager().registerEvents(new ServerEventsHandler(this), this);
     }
@@ -55,11 +54,22 @@ public class Plugin extends JavaPlugin {
         LOGGER.info("minimumplayers disabled");
     }
 
+    public Logger getLogger() {
+        return LOGGER;
+    }
+
     public int getMinimumNumberOfPlayers() {
         return minimumNumberOfPlayers;
     }
 
-    // Newly added getters
+    public int getCurrentNumberOfPlayers() {
+        return currentNumberOfPlayers;
+    }
+
+    public void setCurrentNumberOfPlayers(int currentPlayers) {
+        currentNumberOfPlayers = currentPlayers;
+    }
+
     public boolean isAllowGracePeriod() {
         return allowGracePeriod;
     }
@@ -100,33 +110,46 @@ public class Plugin extends JavaPlugin {
         return playersDecreasedToMinimumMessage;
     }
 
-    public void startFreezeTimer() {
+    public void lockServer() {
+        LOGGER.info("Locking the server");
         if (!isAllowGracePeriod()) {
             // If grace period isn't allowed, freeze the server immediately
+            LOGGER.info("Grace period isn't allowed, freezing the server immediately");
             isServerFrozen = true;
             return;
         }
 
-        if (freezeTask != null) {
-            freezeTask.cancel();
-        }
-
         if (isSendGracePeriodMessage()) {
-            String message = getGracePeriodMessage().replace("%minutes%", String.valueOf(getGracePeriodMinutes()));
-            for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
-                player.sendMessage(ChatColor.YELLOW + message);
-            }
-        }
+            String gracePeriodMessage = getGracePeriodMessage();
+            if (gracePeriodMessage != null) {
+                gracePeriodMessage = gracePeriodMessage.replace("%minutes%",
+                        String.valueOf(getGracePeriodMinutes()));
+                LOGGER.info("Grace period message: " + gracePeriodMessage);
 
+                for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
+                    player.sendMessage(ChatColor.YELLOW + gracePeriodMessage);
+                }
+
+            } else {
+                LOGGER.warning("Grace period message is null");
+            }
+
+        }
         freezeTask = Bukkit.getScheduler().runTaskLater(this, new Runnable() {
             @Override
             public void run() {
                 isServerFrozen = true;
+                String message = ChatColor.RED + getServerLockedMessage()
+                        .replace("%currentPlayers%", String.valueOf(Bukkit.getOnlinePlayers().size()))
+                        .replace("%minimumPlayers%", String.valueOf(getMinimumNumberOfPlayers()));
+                for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
+                    player.sendMessage(message);
+                }
             }
         }, 20L * 60 * getGracePeriodMinutes()); // Using the grace period from config
     }
 
-    public void cancelFreezeTimer() {
+    public void unlockServer() {
         if (freezeTask != null) {
             freezeTask.cancel();
             freezeTask = null;

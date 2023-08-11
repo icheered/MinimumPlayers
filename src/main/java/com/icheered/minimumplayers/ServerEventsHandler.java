@@ -26,45 +26,52 @@ public class ServerEventsHandler implements Listener {
 
     private void handlePlayerCountChange(Object event) {
         int onlinePlayers = Bukkit.getOnlinePlayers().size();
+
+        // Player quit event is fired before the player is removed from the online
+        // players list
+        if (event instanceof PlayerQuitEvent) {
+            onlinePlayers--;
+        }
+
+        plugin.setCurrentNumberOfPlayers(onlinePlayers);
+
         int requiredPlayers = plugin.getMinimumNumberOfPlayers();
 
         if (onlinePlayers > requiredPlayers) {
+            plugin.unlockServer();
             return;
         }
 
-        String message = plugin.getServerLockedMessage()
-                .replace("%currentPlayers%", String.valueOf(onlinePlayers))
-                .replace("%minimumPlayers%", String.valueOf(requiredPlayers));
+        String message = "";
 
-        if (event instanceof PlayerQuitEvent && onlinePlayers < requiredPlayers) {
-            // Only when a player quits and the count goes below the minimum
-            if (!plugin.isServerFrozen()) {
-                plugin.startFreezeTimer();
+        if (event instanceof PlayerJoinEvent) {
+            if (onlinePlayers < requiredPlayers) {
+                message = ChatColor.RED + plugin.getServerLockedMessage()
+                        .replace("%currentPlayers%", String.valueOf(onlinePlayers))
+                        .replace("%minimumPlayers%", String.valueOf(requiredPlayers));
+            } else if (onlinePlayers == requiredPlayers) {
+                message = ChatColor.AQUA + plugin.getPlayersIncreasedToMinimumMessage();
+                plugin.unlockServer();
             }
-        } else if (onlinePlayers == requiredPlayers) {
-            // If the server is frozen, cancel the freeze timer to unfreeze it
-            if (plugin.isServerFrozen()) {
-                plugin.cancelFreezeTimer();
+        } else if (event instanceof PlayerQuitEvent) {
+            if (onlinePlayers == requiredPlayers) {
+                message = ChatColor.YELLOW + plugin.getPlayersDecreasedToMinimumMessage();
+            } else if (onlinePlayers < requiredPlayers) {
+                if (plugin.isServerFrozen()) {
+                    message = ChatColor.RED + plugin.getServerLockedMessage()
+                            .replace("%currentPlayers%", String.valueOf(onlinePlayers))
+                            .replace("%minimumPlayers%", String.valueOf(requiredPlayers));
+                } else {
+                    plugin.lockServer();
+                }
             }
-
-            if (event instanceof PlayerJoinEvent) {
-                message = plugin.getPlayersIncreasedToMinimumMessage();
-            } else if (event instanceof PlayerQuitEvent) {
-                message = plugin.getPlayersDecreasedToMinimumMessage();
-            }
-        } else if (event instanceof PlayerJoinEvent && onlinePlayers < requiredPlayers) {
-            // If a player joins and the count is still below the required, freeze
-            // immediately without timer
-            plugin.isServerFrozen = true;
         }
 
-        // Send the message to all online players
-        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(ChatColor.AQUA + message);
+        // Send the message to all online players if there's a message to send
+        if (!message.isEmpty()) {
+            for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
+                player.sendMessage(message);
+            }
         }
-
-        // Log the message to the server log
-        plugin.getLogger().info(message);
     }
-
 }

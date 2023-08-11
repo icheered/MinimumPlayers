@@ -6,7 +6,7 @@ minimumNumberOfPlayers: 3
 allowGracePeriod: true
 gracePeriodMinutes: 5
 sendGracePeriodMessage: true
-gracePerdiodMessage: "The server will lock in %minutes% minutes if no one else joins."
+gracePeriodMessage: "The server will lock in %minutes% minutes if no one else joins."
 
 # When a player tries to move while the server is locked, should they be notified?
 sendMessageWhenFrozen: true

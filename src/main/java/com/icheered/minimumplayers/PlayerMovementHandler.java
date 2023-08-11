@@ -31,7 +31,7 @@ public class PlayerMovementHandler implements Listener {
             if (plugin.isSendMessageWhenFrozen() && (!lastMessageTime.containsKey(playerId)
                     || (currentTimeMillis - lastMessageTime.get(playerId) > plugin.getFrozenMessageIntervalSeconds()
                             * 1000))) {
-                int onlinePlayers = Bukkit.getOnlinePlayers().size();
+                int onlinePlayers = plugin.getCurrentNumberOfPlayers();
                 int requiredPlayers = plugin.getMinimumNumberOfPlayers();
 
                 String message = plugin.getFrozenMessage()
